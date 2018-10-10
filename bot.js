@@ -1,24 +1,31 @@
-const Twit = require('twit');
-const config = require('./config.js');
-
-//Go into Config File
+//Twit module & Config//
+var Twit = require('twit');
+var config = require('./config.js');
+//Make Twit obj
 var T = new Twit(config);
 
-T.get('search/tweets', { q: 'nyu since:2018-07-11', count: 10 }, function(err, data, response) {
-  console.log(data)
-})
 
-var tweet = {
-	status: "uhhhhh"
+//Use child_process.exec to run cmd in Command line from node
+var exec = require('child_process').exec;
+//Get current directory
+var cd = __dirname;
+//Command to run processing sketch from terminal using processing-java.exe
+var cmd = 'processing-java --sketch=' + cd + '\\my_sketch --run';
+
+
+//Function to run processing sketch
+function run_sketch (){
+	console.log('executing sketch command...\n');
+	exec(cmd, (err,stdout,stderr) => {
+		if (err){
+			console.log(`err- ${err}`);
+		} else {
+			console.log(`stdout- ${stdout} `);
+			console.log(`stderr- ${stderr} \n`);
+			console.log('sketch complete!');
+		}
+	});
+
 }
 
-T.post('statuses/update', tweet, tweetResults);
-
-var tweetResults = (err,data,response) => {
-	if (err) {
-		console.log('post error');
-	} else {
-		console.log('post success');
-	}
-}
-
+run_sketch();

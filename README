@@ -1,0 +1,5 @@
+
+For Windows users -> the directory of processing-java.exe must be added to the PATH variable in order to run processing-java.
+For Mac users -> replace ("%cd%\\my_sketch") with (`pwd`/my_sketch) in cmd variable
+
+Node Packages: Twit, Request

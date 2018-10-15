@@ -2,7 +2,7 @@ void setup(){
   PImage img;
   print("starting sketch...");
   print();
-  size(600,600);
+  size(400,400);
   //Pull image from folder
   img = loadImage("../images/input.png");
   
@@ -17,7 +17,7 @@ void setup(){
     ellipse(x,y,60,60);
   }
   //Draw Image
-  image(img,300,300);
+  image(img,50,50, 300,300);
 
 
   save("output.png"); //save image to images folder

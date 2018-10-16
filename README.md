@@ -6,7 +6,7 @@ The Tweet Museum bot is a bot that creates a beautifully rich archive of users T
 This bot was created with Node.js and Processing.
 
 
-##How to Use
+## How to Use
 The bot is currently on a posting Interval of every 30 minutes. As of this push, the bot only runs on-computer, and has not yet been tested for deployment. 
 
 **For Windows users** -> the directory of processing-java.exe must be added to the PATH variable in order to run processing-java from the command line.

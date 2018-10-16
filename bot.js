@@ -128,7 +128,7 @@ const search_tweets = () =>{
 		text = text.split(" "); 
 		console.log(text); //debugging
 
-		if (text.length > 6){ //If text atleast 8 words long (for accuracy)
+		if ((text.length > 6) && (tweet.lang == 'en')){ //If text atleast 8 words long (for accuracy)
 			//Stop stream after finding a good one!
 			stream.stop();
 			//Choose_keywords returns array of randomly selected key words
@@ -157,6 +157,7 @@ const search_tweets = () =>{
 	});
 }
 
+//Choose random keywords!
 const choose_keywords = (words) =>{
 	let rand1 = Math.floor(Math.random() * words.length);
 	let rand2 = Math.floor(Math.random() * words.length);
@@ -165,5 +166,9 @@ const choose_keywords = (words) =>{
 	return keywords;
 }
 
-setInterval(search_tweets,3600000);
+
+//Run the search process over an interval!
+//setInterval(search_tweets,600000);
 console.log("waiting...");
+
+search_tweets();

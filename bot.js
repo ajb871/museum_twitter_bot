@@ -19,9 +19,11 @@ const request = require('request');
 //Command string to run processing sketch from terminal using processing-java.exe
 const cmd = 'processing-java --sketch="%cd%\\my_sketch" --run';
 
+const statuses = [`'you.... are an artist....`, 'you inspired me', 'incredible....', 'this... is for you', 'i made this.. 4 u', 'you moved me', 'i see your poetic soul, it inspires me...'];
+
 //************Functions***************//
 //Download images locally using Request
-var download_image = (url, filename, callback) =>{
+const download_image = (url, filename, callback) =>{
 	request.head(url, (err,response,body)=>{
 		console.log('content-type:', response.headers['content-type']);
 		//Save response as filename 
@@ -29,33 +31,37 @@ var download_image = (url, filename, callback) =>{
 	})
 }
 //Image search from google API
-var search_images = () =>{
-	console.log('executing image search...');
-	//Keyword to be searched
-	let keyword = 'squidward';
-	client.search(keyword, {size: 'small'})
-		.then(images = (response) =>{
-			//Choose random image from array of results:
-			let rand = Math.floor(Math.random() * response.length);
-			let img_result = response[rand];
-			console.log('\nimage search complete!');
-			console.log(`url: ${img_result.url}\n`);
-			//Download found image from URL (with download_image() func)
-			console.log('proceeding to download...\n');
-			download_image(img_result.url,'images/input.png',()=>{
-				//Callback:
-				console.log('download complete!\n');
-				//Run processing and Send the Tweet!
-				send_tweet();
+const search_images = (keywords) =>{
+	//For each keyword in the pair...
+	for(let i=0;i<keywords.length;i++){
+		console.log('\nexecuting image search...');
+		let keyword = keywords[i];
+		client.search(keyword, {size: 'small'})
+			.then(images = (response) =>{
+				//Choose random image from array of results:
+				var rand = Math.floor(Math.random() * response.length);
+				var img_result = response[rand];
+				console.log('\nimage search '+i+' complete!');
+				console.log(`url` +i+ `: ${img_result.url}\n`);
+				//Download found image from URL (with download_image() func)
+				console.log('proceeding to download...\n');
+				download_image(img_result.url,'images/input'+ i + '.png',()=>{
+					//Callback:
+					console.log('download ' + i + 'complete!\n');
+					//Run processing and Send the Tweet at end of loop!
+					if(i == 1){
+						send_tweet();
+					}
+				});
+			})
+			.catch((err)=>{ //error handling
+				console.log(`image_search ` + i + ` error! ${err}`);
 			});
-		})
-		.catch((err)=>{ //error handling
-			console.log(`image search error! ${err}`);
-		});
+	}
 }
 
 //Function to run processing sketch & send tweet!
-var send_tweet =()=>{
+const send_tweet =()=>{
 	console.log('executing sketch command...\n');
 	//Execute command to launch processing sketch:
 	exec(cmd, (err,stdout,stderr) => {
@@ -87,8 +93,9 @@ var send_tweet =()=>{
 		}
 		var uploaded = (err, data, response) =>{ //calback function
 			var id = data.media_id_string; //id of uploaded image
+			let rand_status = statuses[Math.floor(Math.random()*statuses.length)];
 			var tweet = {
-				status: 'here you go.... #processing #node', //text
+				status: rand_status, //text
 				media_ids: [id] //image id
 			}
 			//Post to Twitter!
@@ -99,8 +106,57 @@ var send_tweet =()=>{
 	});
 }
 
-var search_tweets = () =>{
-//COMMIT
+//Function to random select a "trending sample" tweet with stream!
+//Then create a JSON of the text, user id, and random keywords!
+const search_tweets = () =>{
+	//Create twitter stream
+	const stream = T.stream('statuses/sample');
+	//Look for tweets in stream
+	stream.on('tweet', (tweet)=>{
+		var tweet_id = tweet.id_str; //Tweet ID
+		//Set text as extended text if applicable
+		if (tweet.extended_tweet == undefined){
+			var text = tweet.text;
+		} else { var text = tweet.extended_tweet.full_text;}
 
-	
+		//Split text into array of words
+		text = text.split(" "); 
+		console.log(text); //debugging
+
+		if (text.length > 6){ //If text atleast 8 words long (for accuracy)
+			//Stop stream after finding a good one!
+			stream.stop();
+			//Choose_keywords returns array of randomly selected key words
+			let keywords = choose_keywords(text);
+			//Write JSON file from tweet to share information between node and Processing!:
+			var json = {
+				text_content : text,
+				tweet_id : tweet_id,
+				keywords : keywords
+			}
+			json = JSON.stringify(json);
+			console.log('creating json file....');
+			fs.writeFile('./tweet_content.json' ,json, (err)=>{
+				if (err){
+					console.log(`JSON creation error! ${err}`);
+					return;
+				}
+				console.log('json created!');
+				console.log(keywords);
+				search_images(keywords);
+			});
+			//Search for images now!
+			return; //end function!
+		}
+	});
 }
+
+const choose_keywords = (words) =>{
+	let rand1 = Math.floor(Math.random() * words.length);
+	let rand2 = Math.floor(Math.random() * words.length);
+
+	let keywords = [words[rand1], words[rand2]];
+	return keywords;
+}
+
+search_tweets();

@@ -19,8 +19,7 @@ const request = require('request');
 //Command string to run processing sketch from terminal using processing-java.exe
 const cmd = 'processing-java --sketch="%cd%\\my_sketch" --run';
 
-const statuses = [`'you.... are an artist....`, 'you inspired me', 'incredible....', 'this... is for you', 'i made this.. 4 u', 'you moved me', 'i see your poetic soul, it inspires me...'];
-
+const statuses = [`you.... are an artist....`, 'you inspired me', 'incredible....', 'this... is for you', 'i made this.. 4 u', 'you moved me', 'i see your poetic soul, it inspires me...'];
 //************Functions***************//
 //Download images locally using Request
 const download_image = (url, filename, callback) =>{
@@ -31,7 +30,9 @@ const download_image = (url, filename, callback) =>{
 	})
 }
 //Image search from google API
-const search_images = (keywords) =>{
+const search_images = (json) =>{
+	var json = json;
+	var keywords = json.keywords;
 	//For each keyword in the pair...
 	for(let i=0;i<keywords.length;i++){
 		console.log('\nexecuting image search...');
@@ -50,7 +51,7 @@ const search_images = (keywords) =>{
 					console.log('download ' + i + 'complete!\n');
 					//Run processing and Send the Tweet at end of loop!
 					if(i == 1){
-						send_tweet();
+						send_tweet(json);
 					}
 				});
 			})
@@ -61,7 +62,9 @@ const search_images = (keywords) =>{
 }
 
 //Function to run processing sketch & send tweet!
-const send_tweet =()=>{
+const send_tweet =(json)=>{
+	var tweet_id = json.tweet_id;
+	var username = json.name;
 	console.log('executing sketch command...\n');
 	//Execute command to launch processing sketch:
 	exec(cmd, (err,stdout,stderr) => {
@@ -93,9 +96,11 @@ const send_tweet =()=>{
 		}
 		var uploaded = (err, data, response) =>{ //calback function
 			var id = data.media_id_string; //id of uploaded image
-			let rand_status = statuses[Math.floor(Math.random()*statuses.length)];
+			let rand_status = String(username + ' ' + statuses[Math.floor(Math.random()*statuses.length)]);
+			console.log(rand_status);
 			var tweet = {
 				status: rand_status, //text
+				/*in_reply_to_status_id: json.tweet_id,*/
 				media_ids: [id] //image id
 			}
 			//Post to Twitter!
@@ -114,8 +119,8 @@ const search_tweets = () =>{
 	//Look for tweets in stream
 	stream.on('tweet', (tweet)=>{
 		var tweet_id = tweet.id_str; //Tweet ID
-		//Set text as extended text if applicable
-		if (tweet.extended_tweet == undefined){
+		var screen_name = tweet.user.screen_name; //User Name
+		if (tweet.extended_tweet == undefined){//Set text as extended text if applicable
 			var text = tweet.text;
 		} else { var text = tweet.extended_tweet.full_text;}
 
@@ -132,18 +137,19 @@ const search_tweets = () =>{
 			var json = {
 				text_content : text,
 				tweet_id : tweet_id,
-				keywords : keywords
+				keywords : keywords,
+				name : screen_name
 			}
-			json = JSON.stringify(json);
+			var json_file = JSON.stringify(json);
 			console.log('creating json file....');
-			fs.writeFile('./tweet_content.json' ,json, (err)=>{
+			fs.writeFile('./tweet_content.json' ,json_file, (err)=>{
 				if (err){
 					console.log(`JSON creation error! ${err}`);
 					return;
 				}
 				console.log('json created!');
-				console.log(keywords);
-				search_images(keywords);
+				console.log(json);
+				search_images(json);
 			});
 			//Search for images now!
 			return; //end function!
@@ -159,4 +165,5 @@ const choose_keywords = (words) =>{
 	return keywords;
 }
 
-search_tweets();
+setInterval(search_tweets,3600000);
+console.log("waiting...");

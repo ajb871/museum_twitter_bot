@@ -15,3 +15,8 @@ The bot is currently on a posting Interval of every 30 minutes. As of this push,
 Note: config.js and config_g.js files, referenced in bot.js, contain API keys, tokens, secrets, etc. See [Twit Documentation](https://www.npmjs.com/package/twit) and [Google-Images package Documentation](https://www.npmjs.com/package/twit) to see structure and more info.
 
 Node Packages Used: Twit, Request, Google-Images
+
+## Known Bugs/Future Fixes
+Occasionally, the bot will select a URL included in a tweet as one of the "keywords". Upon the image search, there will be no results, which will result in a download error. The tweet is not sent, and the interval is started over, resulting in a missed post. This can/will be easily resolved by:
+1. Not allowing non-alphabetic characters to be in keywords (eliminating URLS, emojis, etc)
+2. Not continuing with download/tweet send if there are NO image results.
